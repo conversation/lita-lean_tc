@@ -6,10 +6,10 @@ Bundler.require
 require 'trello'
 require 'highline'
 
-BUG = "🕷"
-MAINTENANCE = "✏"
-TECH = "🔧"
-FEATURE = "🎁"
+BUG = "[bug]"
+MAINTENANCE = "[maint]"
+TECH = "[tech]"
+FEATURE = "[feature]"
 
 task :shell do
   client = Trello::Client.new(
@@ -19,10 +19,10 @@ task :shell do
   board = client.find(:boards, ENV['TRELLO_BOARD_ID'])
   cards = board.cards
   cards.select { |card|
-    !card.name.start_with?(BUG) &&
-      !card.name.start_with?(MAINTENANCE) &&
-      !card.name.start_with?(TECH) &&
-      !card.name.start_with?(FEATURE)
+    !card.name.include?(BUG) &&
+      !card.name.include?(MAINTENANCE) &&
+      !card.name.include?(TECH) &&
+      !card.name.include?(FEATURE)
   }.each { |card|
     puts "Missing card type on: #{card.name}"
     puts
