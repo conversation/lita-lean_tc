@@ -11,7 +11,7 @@ MAINTENANCE = "[maint]"
 TECH = "[tech]"
 FEATURE = "[feature]"
 
-task :shell do
+task :set_types do
   client = Trello::Client.new(
     developer_public_key: ENV["TRELLO_PUBLIC_KEY"],
     member_token: ENV["TRELLO_MEMBER_TOKEN"]
