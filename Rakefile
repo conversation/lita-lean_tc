@@ -34,6 +34,37 @@ task :set_types do
   }
 end
 
+task :breakdown do
+  client = Trello::Client.new(
+    developer_public_key: ENV["TRELLO_PUBLIC_KEY"],
+    member_token: ENV["TRELLO_MEMBER_TOKEN"]
+  )
+  board = client.find(:boards, ENV['TRELLO_BOARD_ID'])
+  lists = board.lists
+  lists.each do |list|
+    puts list.name
+    stats = list_stats(list)
+    puts "- #{stats.inspect}"
+  end
+end
+
+def list_stats(list)
+  cards = list.cards
+  result = {}
+  result[:total] = cards.size
+  result[:feature] = cards.map(&:name).select {|name| name.include?(FEATURE) }.size
+  result[:bug] = cards.map(&:name).select {|name| name.include?(BUG) }.size
+  result[:maintenance] = cards.map(&:name).select {|name| name.include?(MAINTENANCE) }.size
+  result[:tech] = cards.map(&:name).select {|name| name.include?(TECH) }.size
+  result[:unknown] = cards.map(&:name).select {|name|
+    !name.include?(FEATURE) &&
+      !name.include?(BUG) &&
+      !name.include?(MAINTENANCE) &&
+      !name.include?(TECH)
+  }.size
+  result
+end
+
 def select_type
   cli = HighLine.new
   selection = nil
