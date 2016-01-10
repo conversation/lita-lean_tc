@@ -24,8 +24,10 @@ task :set_types do
       !card.name.include?(TECH) &&
       !card.name.include?(FEATURE)
   }.each { |card|
-    puts "Missing card type on: #{card.name}"
+    labels = card.labels.map(&:name)
     puts
+    puts "****************************************************************"
+    puts "#{card.name} [#{labels.join(", ")}]"
     new_type = select_type
     card.name = "#{new_type} #{card.name}"
     card.save
