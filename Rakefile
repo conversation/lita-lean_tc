@@ -11,6 +11,15 @@ MAINTENANCE = "[maint]"
 TECH = "[tech]"
 FEATURE = "[feature]"
 
+task :count_cards do
+  client = Trello::Client.new(
+    developer_public_key: ENV["TRELLO_PUBLIC_KEY"],
+    member_token: ENV["TRELLO_MEMBER_TOKEN"]
+  )
+  board = client.find(:boards, ENV['TRELLO_BOARD_ID'])
+  puts "#{board.cards.size} cards on #{board.name}"
+end
+
 task :set_types do
   client = Trello::Client.new(
     developer_public_key: ENV["TRELLO_PUBLIC_KEY"],
