@@ -14,3 +14,13 @@ Loops over all cards on a board. Any that are missing a card-type tag (bug, feat
 will prompt the user to choose a type:
 
     TRELLO_BOARD_ID=xxx TRELLO_PUBLIC_KEY=yyy TRELLO_MEMBER_TOKEN=zzz bundle exec rake set_types
+
+### Display the breakdown of card types on a board
+
+Loops over all lists on a board and prints the count of each card-type it holds:
+
+    TRELLO_BOARD_ID=xxx TRELLO_PUBLIC_KEY=yyy TRELLO_MEMBER_TOKEN=zzz bundle exec rake breakdown
+
+### Count the total number of cards on a board
+
+    TRELLO_BOARD_ID=xxx TRELLO_PUBLIC_KEY=yyy TRELLO_MEMBER_TOKEN=zzz bundle exec rake count_cards
