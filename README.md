@@ -1,26 +1,45 @@
-# tc-lean
+# lita-lean\_tc
 
-Some code for maintaining an grooming the trello boards we use to track development at TC.
+A lita plugin for maintaining and grooming the trello boards we use to track development at TC.
 
 ## Usage
 
-Tasks are triggered using rake.
+Add this gem to your lita installation by including the following line in your Gemfile:
 
-TODO: instructions for discovering the required key, token and board ID
+    gem "lita-lean_tc", git: "http://github.com/conversation/lita-lean_tc.git"
 
-### Setting a card type for all cards on a board
+Then, edit your lita\_config.rb to include the following two lines:
+
+    config.handlers.lean.trello_public_key = ENV["TRELLO_PUBLIC_KEY"] || "trello-key"
+    config.handlers.lean.trello_member_token = ENV["TRELLO_MEMBER_TOKEN"] || "trello-token"
+
+To find the value for TRELLO\_PUBLIC\_KEY, visit the following URL and grab the
+value under "Developer API Keys":
+
+    https://trello.com/app-key
+
+To find the value for TRELLO\_MEMBER\_TOKEN, replace TRELLO\_PUBLIC\_KEY in the following
+URL with the value from above, visit it and click "Allow":
+
+    https://trello.com/1/authorize?expiration=never&name=Ruby%20Trello&response_type=token&scope=read%2Cwrite%2Caccount&key=TRELLO_PUBLIC_KEY
+
+### Chat commands
+
+The following commands are available via the lita bot.
+
+#### Set Card Types
 
 Loops over all cards on a board. Any that are missing a card-type tag (bug, feature, etc)
-will prompt the user to choose a type:
+will prompt the channel to choose a type:
 
-    TRELLO_BOARD_ID=xxx TRELLO_PUBLIC_KEY=yyy TRELLO_MEMBER_TOKEN=zzz bundle exec rake set_types
+    lita lean set-types <trello board id>
 
-### Display the breakdown of card types on a board
+#### Display the breakdown of card types on a board
 
 Loops over all lists on a board and prints the count of each card-type it holds:
 
-    TRELLO_BOARD_ID=xxx TRELLO_PUBLIC_KEY=yyy TRELLO_MEMBER_TOKEN=zzz bundle exec rake breakdown
+    lita lean breakdown <trello board id>
 
 ### Count the total number of cards on a board
 
-    TRELLO_BOARD_ID=xxx TRELLO_PUBLIC_KEY=yyy TRELLO_MEMBER_TOKEN=zzz bundle exec rake count_cards
+    lita lean count <trello board id>
