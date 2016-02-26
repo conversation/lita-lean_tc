@@ -128,8 +128,8 @@ module Lita
 
       def trello_client
         @client ||= Trello::Client.new(
-          developer_public_key: ENV["TRELLO_PUBLIC_KEY"],
-          member_token: ENV["TRELLO_MEMBER_TOKEN"]
+          developer_public_key: config.trello_public_key,
+          member_token: config.trello_member_token
         )
       end
 
