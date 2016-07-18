@@ -43,3 +43,7 @@ Loops over all lists on a board and prints the count of each card-type it holds:
 ### Count the total number of cards on a board
 
     lita lean count <trello board id>
+
+### List the cards that have sat in Review column for more than two days
+
+    lita lean review <trello board id>
