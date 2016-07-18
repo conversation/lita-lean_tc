@@ -11,12 +11,15 @@ module Lita
       TECH = "[tech]"
       FEATURE = "[feature]"
 
+      TWO_DAYS = (60*60*48)
+
       config :trello_public_key
       config :trello_member_token
 
       route(/\Alean count ([a-zA-Z0-9]+)\Z/i, :count, command: true, help: { "lean count [board id]" => "Count cards on the nominated trello board"})
       route(/\Alean breakdown ([a-zA-Z0-9]+)\Z/i, :breakdown, command: true, help: { "lean breakdown [board id]" => "Breakdown of card types on the nominated trello board"})
       route(/\Alean set-types ([a-zA-Z0-9]+)\Z/i, :set_types, command: true, help: { "lean set-types [board id]" => "Begin looping through cards without a type on the nominated trello board"})
+      route(/\Alean review ([a-zA-Z0-9]+)\Z/i, :review, command: true, help: { "lean review [board id]" => "Display cards in review for longer than two days"})
       route(/\A([bmtf])\Z/i, :type, command: false)
 
       # Returns a count of cards on a Trello board, broken down by
@@ -28,6 +31,15 @@ module Lita
         board.lists.each do |list|
           stats = list_stats(list)
           response.reply("#{list.name}: #{stats.inspect}")
+        end
+      end
+
+      # Returns cards that have been in Review column for more than two days
+      def review(response)
+        board_id = response.args.last
+        board = trello_client.find(:boards, board_id)
+        detect_review(board).each do |card|
+          response.reply("#{card.name}")
         end
       end
 
@@ -124,6 +136,28 @@ module Lita
             !name.include?(TECH)
         }.size
         result
+      end
+
+      def detect_review(board)
+        list = board.lists.detect{|list| list.name.starts_with?('Review') }
+        list.cards.select { |card|
+          card_old?(card)
+        }
+      end
+
+      def card_old?(card)
+        action = card.actions.select { |action|
+          action.data.key?('listAfter')
+        }.select {|action|
+          action.data['listAfter']['name'].starts_with?('Review')
+        }.sort_by{ |action|
+          action.date
+        }.last
+        if action.nil?
+          false
+        else
+          action.date < ::Time.now - TWO_DAYS
+        end
       end
 
       def trello_client
