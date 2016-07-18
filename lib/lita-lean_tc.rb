@@ -39,7 +39,7 @@ module Lita
         board_id = response.args.last
         board = trello_client.find(:boards, board_id)
         detect_review(board).each do |card|
-          response.reply("#{card.name}")
+          response.reply("[#{card.name}](#{card.url})")
         end
       end
 
