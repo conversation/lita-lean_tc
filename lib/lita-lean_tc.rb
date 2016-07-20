@@ -1,5 +1,7 @@
 require "lita"
 require 'trello'
+require 'lita-timing'
+require 'review_cards'
 
 module Lita
   module Handlers
@@ -11,16 +13,21 @@ module Lita
       TECH = "[tech]"
       FEATURE = "[feature]"
 
-      TWO_DAYS = (60*60*48)
+      TIMER_INTERVAL = 60
 
       config :trello_public_key
       config :trello_member_token
 
+      on :loaded, :start_timer
+
       route(/\Alean count ([a-zA-Z0-9]+)\Z/i, :count, command: true, help: { "lean count [board id]" => "Count cards on the nominated trello board"})
       route(/\Alean breakdown ([a-zA-Z0-9]+)\Z/i, :breakdown, command: true, help: { "lean breakdown [board id]" => "Breakdown of card types on the nominated trello board"})
       route(/\Alean set-types ([a-zA-Z0-9]+)\Z/i, :set_types, command: true, help: { "lean set-types [board id]" => "Begin looping through cards without a type on the nominated trello board"})
-      route(/\Alean review ([a-zA-Z0-9]+)\Z/i, :review, command: true, help: { "lean review [board id]" => "Display cards in review for longer than two days"})
       route(/\A([bmtf])\Z/i, :type, command: false)
+
+      def start_timer(payload)
+        start_review_timer
+      end
 
       # Returns a count of cards on a Trello board, broken down by
       # the card type
@@ -31,15 +38,6 @@ module Lita
         board.lists.each do |list|
           stats = list_stats(list)
           response.reply("#{list.name}: #{stats.inspect}")
-        end
-      end
-
-      # Returns cards that have been in Review column for more than two days
-      def review(response)
-        board_id = response.args.last
-        board = trello_client.find(:boards, board_id)
-        detect_review(board).each do |card|
-          response.reply("<#{card.url}|#{card.name}>")
         end
       end
 
@@ -82,6 +80,39 @@ module Lita
       end
 
       private
+
+      def start_review_timer
+        every_with_logged_errors(TIMER_INTERVAL) do |timer|
+          persistent_every("review-column-activity", days_in_seconds(1)) do
+            msg = ReviewCards.new(trello_client).to_msg("Lf398U0F")
+            robot.send_message(target, msg) if msg
+          end
+        end
+      end
+
+      def days_in_seconds(days)
+        60 * 60* 24 * days.to_i
+      end
+
+      def every_with_logged_errors(interval, &block)
+        logged_errors do
+          every(interval, &block)
+        end
+      end
+
+      def logged_errors(&block)
+        yield
+      rescue Exception => e
+        puts "Error in timer loop: #{e.inspect}"
+      end
+
+      def persistent_every(name, seconds, &block)
+        Lita::Timing::RateLimit.new(name, redis).once_every(seconds, &block)
+      end
+
+      def target
+        Source.new(room: Lita::Room.find_by_name('tcbot-testing') || "general")
+      end
 
       def select_next_card_from_board(response, board)
         room_name = response.message.source.room.to_s
@@ -136,28 +167,6 @@ module Lita
             !name.include?(TECH)
         }.size
         result
-      end
-
-      def detect_review(board)
-        list = board.lists.detect{|list| list.name.starts_with?('Review') }
-        list.cards.select { |card|
-          card_old?(card)
-        }
-      end
-
-      def card_old?(card)
-        action = card.actions.select { |action|
-          action.data.key?('listAfter')
-        }.select {|action|
-          action.data['listAfter']['name'].starts_with?('Review')
-        }.sort_by{ |action|
-          action.date
-        }.last
-        if action.nil?
-          false
-        else
-          action.date < ::Time.now - TWO_DAYS
-        end
       end
 
       def trello_client
