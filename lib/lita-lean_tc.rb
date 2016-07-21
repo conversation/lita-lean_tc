@@ -18,6 +18,7 @@ module Lita
       config :trello_public_key
       config :trello_member_token
       config :old_review_cards_board_id
+      config :old_review_cards_channel
 
       on :loaded, :start_timer
 
@@ -112,7 +113,7 @@ module Lita
       end
 
       def target
-        Source.new(room: Lita::Room.find_by_name('tcbot-testing') || "general")
+        Source.new(room: Lita::Room.find_by_name(config.old_review_cards_channel) || "general")
       end
 
       def select_next_card_from_board(response, board)
