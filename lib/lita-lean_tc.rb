@@ -17,6 +17,7 @@ module Lita
 
       config :trello_public_key
       config :trello_member_token
+      config :old_review_cards_board_id
 
       on :loaded, :start_timer
 
@@ -84,7 +85,7 @@ module Lita
       def start_review_timer
         every_with_logged_errors(TIMER_INTERVAL) do |timer|
           persistent_every("review-column-activity", days_in_seconds(1)) do
-            msg = ReviewCards.new(trello_client).to_msg("Lf398U0F")
+            msg = ReviewCards.new(trello_client).to_msg(config.old_review_cards_board_id)
             robot.send_message(target, msg) if msg
           end
         end
