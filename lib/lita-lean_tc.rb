@@ -13,6 +13,10 @@ module Lita
       TECH = "[tech]"
       FEATURE = "[feature]"
 
+      CONTENT = "[content]"
+      DATA = "[data]"
+      COMMERCIAL = "[commercial]"
+
       TIMER_INTERVAL = 60
 
       config :trello_public_key
@@ -25,7 +29,9 @@ module Lita
       route(/\Alean count ([a-zA-Z0-9]+)\Z/i, :count, command: true, help: { "lean count [board id]" => "Count cards on the nominated trello board"})
       route(/\Alean breakdown ([a-zA-Z0-9]+)\Z/i, :breakdown, command: true, help: { "lean breakdown [board id]" => "Breakdown of card types on the nominated trello board"})
       route(/\Alean set-types ([a-zA-Z0-9]+)\Z/i, :set_types, command: true, help: { "lean set-types [board id]" => "Begin looping through cards without a type on the nominated trello board"})
+      route(/\Alean set-streams ([a-zA-Z0-9]+)\Z/i, :set_streams, command: true, help: { "lean set-streams [board id]" => "Begin looping through cards without a stream on the nominated trello board"})
       route(/\A([bmtf])\Z/i, :type, command: false)
+      route(/\A([cdo])\Z/i, :stream, command: false)
 
       def start_timer(payload)
         start_review_timer
@@ -58,7 +64,17 @@ module Lita
         board = trello_client.find(:boards, board_id)
         response.reply("Starting Set Types session for board: #{board.name}")
         response.reply("Note: You have #{RESPONSE_TIMEOUT} seconds between questions to reply")
-        select_next_card_from_board(response, board)
+        select_next_typeless_card_from_board(response, board)
+      end
+
+      # Set the current channel into Q&A mode, allowing users to loop through
+      # the cards on a Trello board and choose a card stream
+      def set_streams(response)
+        board_id = response.args.last
+        board = trello_client.find(:boards, board_id)
+        response.reply("Starting Set Streams session for board: #{board.name}")
+        response.reply("Note: You have #{RESPONSE_TIMEOUT} seconds between questions to reply")
+        select_next_streamless_card_from_board(response, board)
       end
 
       # Set the type for a single Trello card. To reach this command, first
@@ -78,7 +94,26 @@ module Lita
                    end
         card.name = "#{new_type} #{card.name}"
         card.save
-        select_next_card_from_board(response, board)
+        select_next_typeless_card_from_board(response, board)
+      end
+
+      # Set the stream for a single Trello card. To reach this command, first
+      # use the "set-streams" command to put a channel into active mode.
+      def stream(response)
+        room_name = response.message.source.room.to_s
+        board_id = redis.get("#{room_name}-board-id")
+        card_id = redis.get("#{room_name}-card-id")
+        board = trello_client.find(:boards, board_id)
+        card = trello_client.find(:cards, card_id)
+        new_stream = case response.message.body
+                     when "c", "C" then CONTENT
+                     when "d", "D" then DATA
+                     else
+                       COMMERCIAL
+                     end
+        card.name = "#{new_stream} #{card.name}"
+        card.save
+        select_next_streamless_card_from_board(response, board)
       end
 
       private
@@ -116,13 +151,26 @@ module Lita
         Source.new(room: Lita::Room.find_by_name(config.old_review_cards_channel) || "general")
       end
 
-      def select_next_card_from_board(response, board)
+      def select_next_typeless_card_from_board(response, board)
         room_name = response.message.source.room.to_s
         card = detect_card_with_no_type(board)
         if card
           set_state(room_name, board.id, card.id)
           response.reply(card_to_string(card))
           response.reply("[b]ug [m]aintenance [t]ech [f]eature")
+        else
+          reset_state(room_name)
+          response.reply("All cards have been classified")
+        end
+      end
+
+      def select_next_streamless_card_from_board(response, board)
+        room_name = response.message.source.room.to_s
+        card = detect_card_with_no_stream(board)
+        if card
+          set_state(room_name, board.id, card.id)
+          response.reply(card_to_string(card))
+          response.reply("[c]ontent [d]ata c[o]mmercial")
         else
           reset_state(room_name)
           response.reply("All cards have been classified")
@@ -154,6 +202,15 @@ module Lita
         }
       end
 
+      def detect_card_with_no_stream(board)
+        cards = board.cards
+        cards.detect { |card|
+          !card.name.include?(CONTENT) &&
+            !card.name.include?(DATA) &&
+            !card.name.include?(COMMERCIAL)
+        }
+      end
+
       def list_stats(list)
         cards = list.cards
         result = {}
@@ -162,11 +219,19 @@ module Lita
         result[:bug] = cards.map(&:name).select {|name| name.include?(BUG) }.size
         result[:maintenance] = cards.map(&:name).select {|name| name.include?(MAINTENANCE) }.size
         result[:tech] = cards.map(&:name).select {|name| name.include?(TECH) }.size
-        result[:unknown] = cards.map(&:name).select {|name|
+        result[:unknown_type] = cards.map(&:name).select {|name|
           !name.include?(FEATURE) &&
             !name.include?(BUG) &&
             !name.include?(MAINTENANCE) &&
             !name.include?(TECH)
+        }.size
+        result[:content] = cards.map(&:name).select {|name| name.include?(CONTENT) }.size
+        result[:data] = cards.map(&:name).select {|name| name.include?(DATA) }.size
+        result[:commercial] = cards.map(&:name).select {|name| name.include?(COMMERCIAL) }.size
+        result[:unknown_stream] = cards.map(&:name).select {|name|
+          !name.include?(CONTENT) &&
+            !name.include?(DATA) &&
+            !name.include?(COMMERCIAL)
         }.size
         result
       end
