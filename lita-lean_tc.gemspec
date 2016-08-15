@@ -20,4 +20,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency("rdoc")
 
   spec.add_dependency('ruby-trello')
+  spec.add_dependency("lita-timing", "~> 0.3")
 end

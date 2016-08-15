@@ -120,7 +120,7 @@ module Lita
 
       def start_review_timer
         every_with_logged_errors(TIMER_INTERVAL) do |timer|
-          persistent_every("review-column-activity", days_in_seconds(1)) do
+          daily_at("23:00", [:sunday, :monday, :tuesday, :wednesday, :thursday], "review-column-activity") do
             msg = ReviewCards.new(trello_client).to_msg(config.old_review_cards_board_id)
             robot.send_message(target, msg) if msg
           end
@@ -143,8 +143,8 @@ module Lita
         puts "Error in timer loop: #{e.inspect}"
       end
 
-      def persistent_every(name, seconds, &block)
-        Lita::Timing::RateLimit.new(name, redis).once_every(seconds, &block)
+      def daily_at(time, day, name, &block)
+        Lita::Timing::Scheduled.new(name, redis).daily_at(time, day, &block)
       end
 
       def target
