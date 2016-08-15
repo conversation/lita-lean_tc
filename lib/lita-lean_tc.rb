@@ -143,6 +143,10 @@ module Lita
         puts "Error in timer loop: #{e.inspect}"
       end
 
+      def daily_at(time, day, name, &block)
+        Lita::Timing::Scheduled.new(name, redis).daily_at(time, day, &block)
+      end
+
       def target
         Source.new(room: Lita::Room.find_by_name(config.old_review_cards_channel) || "general")
       end
