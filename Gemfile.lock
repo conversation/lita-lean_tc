@@ -20,6 +20,7 @@ GEM
       domain_name (~> 0.5)
     i18n (0.7.0)
     json (1.8.3)
+    lita-timing (0.3.0)
     method_source (0.8.2)
     mime-types (2.99)
     minitest (5.8.3)
@@ -53,6 +54,7 @@ PLATFORMS
 
 DEPENDENCIES
   highline
+  lita-timing
   pry
   rake
   ruby-trello
