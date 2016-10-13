@@ -2,6 +2,7 @@ require "lita"
 require 'trello'
 require 'lita-timing'
 require 'review_cards'
+require 'new_card'
 
 module Lita
   module Handlers
@@ -41,11 +42,8 @@ module Lita
 
       # Returns cards listed in Confirmed on the Development board
       def list_cards(response)
-        board_id = config.development_board_id
-        board = trello_client.find(:boards, board_id)
-        detect_confirmed(board).each do |card|
-          response.reply("#{card.name}, #{card.url}")
-        end
+        msg = NewCard.new(trello_client).display_confirmed_msg(config.development_board_id)
+        response.reply("#{msg}")
       end
 
       # Returns a count of cards on a Trello board, broken down by
@@ -245,11 +243,6 @@ module Lita
             !name.include?(COMMERCIAL)
         }.size
         result
-      end
-
-      def detect_confirmed(board)
-        list = board.lists.detect{|list| list.name.starts_with?('Confirmed')}
-        list.cards
       end
 
       def trello_client
