@@ -8,7 +8,7 @@ module Lita
 
     def display_confirmed_msg(board_id)
       board = @trello_client.find(:boards, board_id)
-      confirmed_cards = detect_confirmed(board)
+      confirmed_cards = detect_confirmed(board).cards
       message = "Confirmed cards:\n"
       message += confirmed_cards.map do |card|
         "#{card.name}, #{card.url}"
@@ -19,7 +19,6 @@ module Lita
 
     def detect_confirmed(board)
       list = board.lists.detect{|list| list.name.starts_with?('Confirmed')}
-      list.cards
     end
 
   end
