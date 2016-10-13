@@ -15,6 +15,13 @@ module Lita
       end.join("\n")
     end
 
+    def create_new_card(name)
+      data = {
+        'name'=>'will this work?', 'idList'=>'53423bf0e43c411a746ce27f', 'due'=>nil
+      }
+      @trello_client.create(:card, data)
+    end
+
     private
 
     def detect_confirmed(board)
