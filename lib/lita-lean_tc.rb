@@ -44,7 +44,7 @@ module Lita
         board_id = config.development_board_id
         board = trello_client.find(:boards, board_id)
         detect_confirmed(board).each do |card|
-          response.reply("#{card.name}")
+          response.reply("#{card.name}, #{card.url}")
         end
       end
 
