@@ -25,16 +25,27 @@ module Lita
       config :old_review_cards_channel
 
       on :loaded, :start_timer
+      # on :buildkite_build_finished, :build_finished
 
       route(/\Alean count ([a-zA-Z0-9]+)\Z/i, :count, command: true, help: { "lean count [board id]" => "Count cards on the nominated trello board"})
       route(/\Alean breakdown ([a-zA-Z0-9]+)\Z/i, :breakdown, command: true, help: { "lean breakdown [board id]" => "Breakdown of card types on the nominated trello board"})
       route(/\Alean set-types ([a-zA-Z0-9]+)\Z/i, :set_types, command: true, help: { "lean set-types [board id]" => "Begin looping through cards without a type on the nominated trello board"})
       route(/\Alean set-streams ([a-zA-Z0-9]+)\Z/i, :set_streams, command: true, help: { "lean set-streams [board id]" => "Begin looping through cards without a stream on the nominated trello board"})
+      route(/\Alean confirmed-cards\Z/i, :list_cards, command: true, help: {"lean confirmed-cards" => "List all cards in the confirmed column"})
       route(/\A([bmtf])\Z/i, :type, command: false)
       route(/\A([cdo])\Z/i, :stream, command: false)
 
       def start_timer(payload)
         start_review_timer
+      end
+
+      # Returns cards listed in Confirmed on the Development board
+      def list_cards(response)
+        board_id = config.development_board_id
+        board = trello_client.find(:boards, board_id)
+        detect_confirmed(board).each do |card|
+          response.reply("#{card.name}")
+        end
       end
 
       # Returns a count of cards on a Trello board, broken down by
@@ -234,6 +245,11 @@ module Lita
             !name.include?(COMMERCIAL)
         }.size
         result
+      end
+
+      def detect_confirmed(board)
+        list = board.lists.detect{|list| list.name.starts_with?('Confirmed')}
+        list.cards
       end
 
       def trello_client
