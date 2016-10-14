@@ -33,7 +33,7 @@ module Lita
       route(/\Alean set-types ([a-zA-Z0-9]+)\Z/i, :set_types, command: true, help: { "lean set-types [board id]" => "Begin looping through cards without a type on the nominated trello board"})
       route(/\Alean set-streams ([a-zA-Z0-9]+)\Z/i, :set_streams, command: true, help: { "lean set-streams [board id]" => "Begin looping through cards without a stream on the nominated trello board"})
       route(/\Alean confirmed-cards\Z/i, :list_cards, command: true, help: { "lean confirmed-cards" => "List all cards in the confirmed column" })
-      route(/\Alean create-new-confirmed\Z/i, :create_confirmed, commande: true, help: { "lean new-confirmed-card" => "Create a new card in the confirmed column" })
+      route(/\AOh Oh, 0 day(s) since the last master failure on tc-i18n-hygiene\Z/i, :create_confirmed, command: true, help: { "Oh Oh, 0 day(s) since the last master failure on tc-i18n-hygiene" => "Create a new card in the confirmed column" })
       route(/\A([bmtf])\Z/i, :type, command: false)
       route(/\A([cdo])\Z/i, :stream, command: false)
 
@@ -49,7 +49,7 @@ module Lita
 
       # Creates a card with specified value in the Confirmed column on the Development board
       def create_confirmed(response)
-        new_card = NewCard.new(trello_client).create_new_card("will this work")
+        new_card = NewCard.new(trello_client).create_new_card
         response.reply("#{new_card.name}, #{new_card.url}")
       end
 

@@ -15,9 +15,9 @@ module Lita
       end.join("\n")
     end
 
-    def create_new_card(name)
+    def create_new_card
       data = {
-        'name'=>'will this work?', 'idList'=>'53423bf0e43c411a746ce27f', 'due'=>nil
+        'name'=>'tc-i18n-hygiene check failed', 'idList'=>'53423bf0e43c411a746ce27f', 'due'=>nil
       }
       @trello_client.create(:card, data)
     end
