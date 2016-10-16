@@ -26,14 +26,13 @@ module Lita
       config :old_review_cards_channel
 
       on :loaded, :start_timer
-      # on :buildkite_build_finished, :build_finished
+      on :buildkite_build_finished, :build_finished
 
       route(/\Alean count ([a-zA-Z0-9]+)\Z/i, :count, command: true, help: { "lean count [board id]" => "Count cards on the nominated trello board"})
       route(/\Alean breakdown ([a-zA-Z0-9]+)\Z/i, :breakdown, command: true, help: { "lean breakdown [board id]" => "Breakdown of card types on the nominated trello board"})
       route(/\Alean set-types ([a-zA-Z0-9]+)\Z/i, :set_types, command: true, help: { "lean set-types [board id]" => "Begin looping through cards without a type on the nominated trello board"})
       route(/\Alean set-streams ([a-zA-Z0-9]+)\Z/i, :set_streams, command: true, help: { "lean set-streams [board id]" => "Begin looping through cards without a stream on the nominated trello board"})
       route(/\Alean confirmed-cards\Z/i, :list_cards, command: true, help: { "lean confirmed-cards" => "List all cards in the confirmed column" })
-      route(/\AOh Oh, 0 day(s) since the last master failure on tc-i18n-hygiene\Z/i, :create_confirmed, command: true, help: { "Oh Oh, 0 day(s) since the last master failure on tc-i18n-hygiene" => "Create a new card in the confirmed column" })
       route(/\A([bmtf])\Z/i, :type, command: false)
       route(/\A([cdo])\Z/i, :stream, command: false)
 
@@ -48,9 +47,18 @@ module Lita
       end
 
       # Creates a card with specified value in the Confirmed column on the Development board
-      def create_confirmed(response)
+      def create_confirmed
         new_card = NewCard.new(trello_client).create_new_card
-        response.reply("#{new_card.name}, #{new_card.url}")
+        response = "#{new_card.name}, #{new_card.url}"
+        robot.send_message(target, response)
+      end
+
+      def build_finished(payload)
+        event = payload[:event]
+
+        if event.pipeline_name == "tc-i18n-hygiene"
+          create_confirmed
+        end
       end
 
       # Returns a count of cards on a Trello board, broken down by
