@@ -46,7 +46,8 @@ module Lita
         response.reply("#{msg}")
       end
 
-      # Creates a card with specified value in the Confirmed column on the Development board
+      # Creates a card with specified value in the Confirmed column on
+      # the Development board when the tc-i18n-hygiene build fails
       def create_confirmed
         new_card = NewCard.new(trello_client).create_new_card
         response = "#{new_card.name}, #{new_card.url}"
@@ -56,7 +57,7 @@ module Lita
       def build_finished(payload)
         event = payload[:event]
 
-        if event.pipeline_name == "tc-i18n-hygiene"
+        if event.pipeline_name == "tc-i18n-hygiene" && !event.passed?
           create_confirmed
         end
       end
