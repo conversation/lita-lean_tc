@@ -21,7 +21,7 @@ module Lita
 
       config :trello_public_key
       config :trello_member_token
-      config :old_review_cards_board_id
+      config :development_board_id
       config :old_review_cards_channel
 
       on :loaded, :start_timer
@@ -121,7 +121,7 @@ module Lita
       def start_review_timer
         every_with_logged_errors(TIMER_INTERVAL) do |timer|
           daily_at("23:00", [:sunday, :monday, :tuesday, :wednesday, :thursday], "review-column-activity") do
-            msg = ReviewCards.new(trello_client).to_msg(config.old_review_cards_board_id)
+            msg = ReviewCards.new(trello_client).to_msg(config.development_board_id)
             robot.send_message(target, msg) if msg
           end
         end
