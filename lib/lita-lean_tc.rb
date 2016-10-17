@@ -24,6 +24,7 @@ module Lita
       config :trello_member_token
       config :development_board_id
       config :old_review_cards_channel
+      config :list_id
 
       on :loaded, :start_timer
       on :buildkite_build_finished, :build_finished
@@ -42,14 +43,14 @@ module Lita
 
       # Returns cards listed in Confirmed on the Development board
       def list_cards(response)
-        msg = NewCard.new(trello_client).display_confirmed_msg(config.development_board_id)
+        msg = NewCard.new(trello_client, config.list_id).display_confirmed_msg(config.development_board_id)
         response.reply("#{msg}")
       end
 
       # Creates a card with specified value in the Confirmed column on
       # the Development board when the tc-i18n-hygiene build fails
       def create_confirmed
-        new_card = NewCard.new(trello_client).create_new_card
+        new_card = NewCard.new(trello_client, config.list_id).create_new_card
         response = "#{new_card.name}, #{new_card.url}"
         robot.send_message(target, response)
       end
