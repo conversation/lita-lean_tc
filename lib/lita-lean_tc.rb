@@ -2,6 +2,7 @@ require "lita"
 require 'trello'
 require 'lita-timing'
 require 'review_cards'
+require 'new_card'
 
 module Lita
   module Handlers
@@ -21,20 +22,45 @@ module Lita
 
       config :trello_public_key
       config :trello_member_token
-      config :old_review_cards_board_id
+      config :development_board_id
       config :old_review_cards_channel
+      config :list_id
 
       on :loaded, :start_timer
+      on :buildkite_build_finished, :build_finished
 
       route(/\Alean count ([a-zA-Z0-9]+)\Z/i, :count, command: true, help: { "lean count [board id]" => "Count cards on the nominated trello board"})
       route(/\Alean breakdown ([a-zA-Z0-9]+)\Z/i, :breakdown, command: true, help: { "lean breakdown [board id]" => "Breakdown of card types on the nominated trello board"})
       route(/\Alean set-types ([a-zA-Z0-9]+)\Z/i, :set_types, command: true, help: { "lean set-types [board id]" => "Begin looping through cards without a type on the nominated trello board"})
       route(/\Alean set-streams ([a-zA-Z0-9]+)\Z/i, :set_streams, command: true, help: { "lean set-streams [board id]" => "Begin looping through cards without a stream on the nominated trello board"})
+      route(/\Alean confirmed-cards\Z/i, :list_cards, command: true, help: { "lean confirmed-cards" => "List all cards in the confirmed column" })
       route(/\A([bmtf])\Z/i, :type, command: false)
       route(/\A([cdo])\Z/i, :stream, command: false)
 
       def start_timer(payload)
         start_review_timer
+      end
+
+      # Returns cards listed in Confirmed on the Development board
+      def list_cards(response)
+        msg = NewCard.new(trello_client, config.list_id).display_confirmed_msg(config.development_board_id)
+        response.reply("#{msg}")
+      end
+
+      # Creates a card with specified value in the Confirmed column on
+      # the Development board when the tc-i18n-hygiene build fails
+      def create_confirmed
+        new_card = NewCard.new(trello_client, config.list_id).create_new_card
+        response = "#{new_card.name}, #{new_card.url}"
+        robot.send_message(target, response)
+      end
+
+      def build_finished(payload)
+        event = payload[:event]
+
+        if event.pipeline_name == "tc-i18n-hygiene" && !event.passed?
+          create_confirmed
+        end
       end
 
       # Returns a count of cards on a Trello board, broken down by
@@ -121,7 +147,7 @@ module Lita
       def start_review_timer
         every_with_logged_errors(TIMER_INTERVAL) do |timer|
           daily_at("23:00", [:sunday, :monday, :tuesday, :wednesday, :thursday], "review-column-activity") do
-            msg = ReviewCards.new(trello_client).to_msg(config.old_review_cards_board_id)
+            msg = ReviewCards.new(trello_client).to_msg(config.development_board_id)
             robot.send_message(target, msg) if msg
           end
         end
