@@ -66,14 +66,11 @@ module Lita
           create_confirmed
         end
       end
-      # Returns a list of all cards on the Feature request board
-      #
+
+      # Lists all cards on the feature request wall
       def list_feature_request(response)
-        board_id = config.feature_board_id
-        board = trello_client.find(:boards, board_id)
-        board.cards.each do |card|
-          response.reply("#{card.name}, #{card.url}", "#{card.list.name}")
-        end
+        msg = FeatureRequests.new(trello_client).all_feature_request(config.feature_board_id)
+        response.reply("#{msg}")
       end
 
       # Returns a count of cards on a Trello board, broken down by
