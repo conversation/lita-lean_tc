@@ -175,14 +175,6 @@ module Lita
         end
       end
 
-      def days_in_seconds(days)
-        60 * 60* 24 * days.to_i
-      end
-
-      def seven_days_in_seconds
-        ::Time.now - SEVEN_DAYS
-      end
-
       def every_with_logged_errors(interval, &block)
         logged_errors do
           every(interval, &block)
