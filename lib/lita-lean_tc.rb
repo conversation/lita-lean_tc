@@ -3,6 +3,7 @@ require 'trello'
 require 'lita-timing'
 require 'review_cards'
 require 'new_card'
+require 'feature_requests'
 
 module Lita
   module Handlers
@@ -41,6 +42,7 @@ module Lita
 
       def start_timer(payload)
         start_review_timer
+        start_feature_timer
       end
 
       # Returns cards listed in Confirmed on the Development board
@@ -164,8 +166,21 @@ module Lita
         end
       end
 
+      def start_feature_timer
+        every_with_logged_errors(TIMER_INTERVAL) do |timer|
+          daily_at("23:00", [:monday], "feature-request-activity") do
+            msg = FeatureRequests.new(trello_client).to_msg(config.feature_board_id)
+            robot.send_message(target, msg) if msg
+          end
+        end
+      end
+
       def days_in_seconds(days)
         60 * 60* 24 * days.to_i
+      end
+
+      def seven_days_in_seconds
+        ::Time.now - SEVEN_DAYS
       end
 
       def every_with_logged_errors(interval, &block)
