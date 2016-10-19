@@ -168,7 +168,7 @@ module Lita
 
       def start_feature_timer
         every_with_logged_errors(TIMER_INTERVAL) do |timer|
-          daily_at("00:00", [:monday], "feature-request-activity") do
+          daily_at("23:00", [:sunday], "feature-request-activity") do
             msg = FeatureRequests.new(trello_client).to_msg(config.feature_board_id)
             robot.send_message(target, msg) if msg
           end
