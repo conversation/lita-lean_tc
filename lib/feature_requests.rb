@@ -2,7 +2,7 @@ module Lita
   # Returns cards that have been in Review column for more than two days
   class FeatureRequests
 
-    SEVEN_DAYS = (60*60*168)
+    SEVEN_DAYS = (60*60*24*7)
 
     def initialize(trello_client)
       @trello_client = trello_client
