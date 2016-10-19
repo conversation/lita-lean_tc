@@ -23,6 +23,7 @@ module Lita
       config :trello_public_key
       config :trello_member_token
       config :development_board_id
+      config :feature_board_id
       config :old_review_cards_channel
       config :list_id
 
@@ -34,7 +35,7 @@ module Lita
       route(/\Alean set-types ([a-zA-Z0-9]+)\Z/i, :set_types, command: true, help: { "lean set-types [board id]" => "Begin looping through cards without a type on the nominated trello board"})
       route(/\Alean set-streams ([a-zA-Z0-9]+)\Z/i, :set_streams, command: true, help: { "lean set-streams [board id]" => "Begin looping through cards without a stream on the nominated trello board"})
       route(/\Alean confirmed-cards\Z/i, :list_cards, command: true, help: { "lean confirmed-cards" => "List all cards in the confirmed column" })
-      route(/\lean list-feature-requests\Z/i, :list_feature_request, command: true, help: { "lean feature-request" => "List all cards on the Feature Request baord" })
+      route(/\Alean list-feature-requests\Z/i, :list_feature_request, command: true, help: { "lean feature-request" => "List all cards on the Feature Request baord" })
       route(/\A([bmtf])\Z/i, :type, command: false)
       route(/\A([cdo])\Z/i, :stream, command: false)
 
@@ -61,11 +62,12 @@ module Lita
 
         if event.pipeline_name == "tc-i18n-hygiene" && !event.passed?
           create_confirmed
+        end
       end
       # Returns a list of all cards on the Feature request board
       #
       def list_feature_request(response)
-        board_id = "hD3oNZ2P"
+        board_id = config.feature_board_id
         board = trello_client.find(:boards, board_id)
         board.cards.each do |card|
           response.reply("#{card.name}, #{card.url}", "#{card.list.name}")
