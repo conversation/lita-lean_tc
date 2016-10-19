@@ -1,5 +1,5 @@
 module Lita
-  # Returns cards that have been in Review column for more than two days
+# A class for dealing with the feature request board on trello
   class FeatureRequests
 
     SEVEN_DAYS = (60*60*24*7)
@@ -8,6 +8,8 @@ module Lita
       @trello_client = trello_client
     end
 
+    # Select cards created within the previous seven days
+    #
     def to_msg(board_id)
       board = @trello_client.find(:boards, board_id)
       board.cards.select{ |card|
