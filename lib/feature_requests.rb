@@ -21,7 +21,7 @@ module Lita
 
     # Returns a list of all cards on the Feature request board
     #
-    def all_feature_request(board_id)
+    def all_feature_requests(board_id)
       board = @trello_client.find(:boards, board_id)
       board.cards.map{ |card|
         "#{card.name}, #{card.short_url}, #{card.list.name}"

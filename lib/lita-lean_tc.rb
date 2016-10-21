@@ -36,7 +36,7 @@ module Lita
       route(/\Alean set-types ([a-zA-Z0-9]+)\Z/i, :set_types, command: true, help: { "lean set-types [board id]" => "Begin looping through cards without a type on the nominated trello board"})
       route(/\Alean set-streams ([a-zA-Z0-9]+)\Z/i, :set_streams, command: true, help: { "lean set-streams [board id]" => "Begin looping through cards without a stream on the nominated trello board"})
       route(/\Alean confirmed-cards\Z/i, :list_cards, command: true, help: { "lean confirmed-cards" => "List all cards in the confirmed column" })
-      route(/\Alean list-feature-requests\Z/i, :list_feature_request, command: true, help: { "lean list-feature-requests" => "List all cards on the Feature Request board" })
+      route(/\Alean list-feature-requests\Z/i, :list_feature_requests, command: true, help: { "lean list-feature-requests" => "List all cards on the Feature Request board" })
       route(/\A([bmtf])\Z/i, :type, command: false)
       route(/\A([cdo])\Z/i, :stream, command: false)
 
@@ -66,10 +66,10 @@ module Lita
           create_confirmed
         end
       end
-
-      # Lists all cards on the feature request wall
-      def list_feature_request(response)
-        msg = FeatureRequests.new(trello_client).all_feature_request(config.feature_board_id)
+      #
+      # # Lists all cards on the feature request wall
+      def list_feature_requests(response)
+        msg = FeatureRequests.new(trello_client).all_feature_requests(config.feature_board_id)
         response.reply("#{msg}")
       end
 
