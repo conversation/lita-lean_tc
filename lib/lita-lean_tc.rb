@@ -3,6 +3,7 @@ require 'trello'
 require 'lita-timing'
 require 'review_cards'
 require 'new_card'
+require 'feature_requests'
 
 module Lita
   module Handlers
@@ -23,6 +24,7 @@ module Lita
       config :trello_public_key
       config :trello_member_token
       config :development_board_id
+      config :feature_board_id
       config :old_review_cards_channel
       config :list_id
 
@@ -34,11 +36,13 @@ module Lita
       route(/\Alean set-types ([a-zA-Z0-9]+)\Z/i, :set_types, command: true, help: { "lean set-types [board id]" => "Begin looping through cards without a type on the nominated trello board"})
       route(/\Alean set-streams ([a-zA-Z0-9]+)\Z/i, :set_streams, command: true, help: { "lean set-streams [board id]" => "Begin looping through cards without a stream on the nominated trello board"})
       route(/\Alean confirmed-cards\Z/i, :list_cards, command: true, help: { "lean confirmed-cards" => "List all cards in the confirmed column" })
+      route(/\Alean list-feature-requests\Z/i, :list_feature_requests, command: true, help: { "lean list-feature-requests" => "List all cards on the Feature Request board" })
       route(/\A([bmtf])\Z/i, :type, command: false)
       route(/\A([cdo])\Z/i, :stream, command: false)
 
       def start_timer(payload)
         start_review_timer
+        start_feature_timer
       end
 
       # Returns cards listed in Confirmed on the Development board
@@ -61,6 +65,12 @@ module Lita
         if event.pipeline_name == "tc-i18n-hygiene" && !event.passed?
           create_confirmed
         end
+      end
+      #
+      # # Lists all cards on the feature request wall
+      def list_feature_requests(response)
+        msg = FeatureRequests.new(trello_client).all_feature_requests(config.feature_board_id)
+        response.reply("#{msg}")
       end
 
       # Returns a count of cards on a Trello board, broken down by
@@ -153,8 +163,13 @@ module Lita
         end
       end
 
-      def days_in_seconds(days)
-        60 * 60* 24 * days.to_i
+      def start_feature_timer
+        every_with_logged_errors(TIMER_INTERVAL) do |timer|
+          daily_at("23:00", [:sunday], "feature-request-activity") do
+            msg = FeatureRequests.new(trello_client).to_msg(config.feature_board_id)
+            robot.send_message(target, msg) if msg
+          end
+        end
       end
 
       def every_with_logged_errors(interval, &block)
