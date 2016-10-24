@@ -23,6 +23,7 @@ module Lita
         'name'=>'tc-i18n-hygiene check failed',
         'idList'=>"#{@list_id}",
         'due'=>nil,
+        'desc'=>'https://buildkite.com/conversation/tc-i18n-hygiene',
         'labels'=>['name'=>'TC','color'=>'green'],
         'idLabels'=>["#{@id_labels}"]
       }
