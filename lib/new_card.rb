@@ -1,10 +1,12 @@
+require 'pry'
 module Lita
   # Returns cards that are in the Confirmed column
   class NewCard
 
-    def initialize(trello_client, list_id)
+    def initialize(trello_client, list_id, id_labels)
       @trello_client = trello_client
       @list_id = list_id
+      @id_labels = id_labels
     end
 
     def display_confirmed_msg(board_id)
@@ -18,7 +20,11 @@ module Lita
 
     def create_new_card
       data = {
-        'name'=>'tc-i18n-hygiene check failed', 'idList'=>"#{@list_id}", 'due'=>nil
+        'name'=>'tc-i18n-hygiene check failed',
+        'idList'=>"#{@list_id}",
+        'due'=>nil,
+        'labels'=>['name'=>'TC','color'=>'green'],
+        'idLabels'=>["#{@id_labels}"]
       }
       @trello_client.create(:card, data)
     end
