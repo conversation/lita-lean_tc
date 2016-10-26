@@ -27,6 +27,7 @@ module Lita
       config :feature_board_id
       config :old_review_cards_channel
       config :list_id
+      config :id_labels
 
       on :loaded, :start_timer
       on :buildkite_build_finished, :build_finished
@@ -54,7 +55,7 @@ module Lita
       # Creates a card with specified value in the Confirmed column on
       # the Development board when the tc-i18n-hygiene build fails
       def create_confirmed
-        new_card = NewCard.new(trello_client, config.list_id).create_new_card
+        new_card = NewCard.new(trello_client, config.list_id, config.id_labels).create_new_card
         response = "#{new_card.name}, #{new_card.url}"
         robot.send_message(target, response)
       end
