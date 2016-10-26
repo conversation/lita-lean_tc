@@ -1,4 +1,3 @@
-require 'pry'
 module Lita
   # Returns cards that are in the Confirmed column
   class NewCard
