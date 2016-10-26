@@ -23,7 +23,6 @@ module Lita
         'idList'=>"#{@list_id}",
         'due'=>nil,
         'desc'=>'https://buildkite.com/conversation/tc-i18n-hygiene',
-        'labels'=>['name'=>'TC','color'=>'green'],
         'idLabels'=>["#{@id_labels}"]
       }
       @trello_client.create(:card, data)
