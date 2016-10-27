@@ -26,6 +26,7 @@ module Lita
         'desc'=>"#{@build_url}",
         'idLabels'=>["#{@id_labels}"]
       }
+      puts data.inspect
       @trello_client.create(:card, data)
     end
 
