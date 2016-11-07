@@ -24,7 +24,7 @@ module Lita
         'idList'=>"#{@list_id}",
         'due'=>nil,
         'desc'=>"#{@build_url}",
-        'idLabels'=>["#{@id_labels}"]
+        'idLabels'=>@id_labels
       }
       @trello_client.create(:card, data)
     end
